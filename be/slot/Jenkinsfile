@@ -10,6 +10,7 @@ pipeline {
     DOCKERHUB           = 'dockerhub.gmstd.dev'
     registryCredential  = 'dockerhub'
     WORKER_NODE         = 'bo-dev'
+    SERVICE_PORT        = '9901'
     }
 
     stages {
@@ -26,7 +27,6 @@ pipeline {
                     WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
                     REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
                     TELEGRAM_GROUP = 'BE_CICD'
-                    SERVICE_PORT = '9901'
 
                     def BO_LIST = ["p9901"]
 

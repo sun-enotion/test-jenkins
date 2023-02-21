@@ -3,7 +3,6 @@ def kSlotService() {
         apiVersion: apps/v1
         kind: Deployment
         metadata:
-          creationTimestamp: null
           labels:
             app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           name: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
@@ -43,7 +42,6 @@ def kSlotService() {
         apiVersion: v1
         kind: Service
         metadata:
-          creationTimestamp: null
           labels:
             app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           name: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
