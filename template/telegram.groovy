@@ -22,7 +22,7 @@ def message(groups, message, showTime) {
   groupArr.each{ group ->
     def groupName = group.trim()
 
-    httpRequest "https://api.telegram.org/bot6184040607:AAGeWN1F-Aj43i8Kz-h0vRF4GNTh8-Hyy9k/sendmessage?chat_id=${groupMap[groupName]}&text=${message}"
+    httpRequest "https://api.telegram.org/bot5906837562:AAGSeXxsajVJRg0Z-v_1l-utaIG5kbciXos/sendmessage?chat_id=${groupMap[groupName]}&text=${message}"
   }
 }
 
