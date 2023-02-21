@@ -3,7 +3,7 @@ pipeline {
     environment {
     DEPLOYMENT_NAME     = 'game-slot'
     DEPLOY_ENV          = 'p9901'
-    PROJECT_START_DATE  = '2022-12-8'
+    PROJECT_START_DATE  = '2023-02-21'
     CREDENTIALS_ID      = 'ktekdev'
     JENKINS_CI_REPO     = 'git@github.com:hungcaoktek/ktek-ci-cd.git'
     TELEGRAM_GROUP      = 'BO_KGAME'
@@ -21,7 +21,6 @@ pipeline {
             }
             steps {
                 script {
-                    // def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
                     def teleUtil    = load "${WORKSPACE}/template/telegram.groovy"
                     DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
                     WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
