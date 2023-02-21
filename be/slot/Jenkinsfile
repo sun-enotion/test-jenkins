@@ -6,7 +6,7 @@ pipeline {
     // nodejs 'nodejs12'
     // }
     options {
-    ansiColor('xterm')
+    // ansiColor('xterm')
     buildDiscarder(logRotator(numToKeepStr: '20'))
     }
     environment {
@@ -31,19 +31,19 @@ pipeline {
                 defaultValue: 'staging',
                 visibleItemCount: 5,
                 description: 'Please select ENV to run the deployment',)
-        gitParameter(
-                branchFilter: 'origin/(.*)',
-                tagFilter: '*',
-                defaultValue: 'main',
-                name: 'FROM_BRANCH',
-                type: 'PT_BRANCH',
-                quickFilterEnabled: 'true',
-                selectedValue: 'NONE',
-                sortMode: 'ASCENDING_SMART',
-                branch: '',
-                useRepository: 'https://github.com/sun-enotion/test-jenkins.git',
-                description: 'select branch to run the deploy, default: main-v3',
-                listSize: '10')
+        // gitParameter(
+        //         branchFilter: 'origin/(.*)',
+        //         tagFilter: '*',
+        //         defaultValue: 'main',
+        //         name: 'FROM_BRANCH',
+        //         type: 'PT_BRANCH',
+        //         quickFilterEnabled: 'true',
+        //         selectedValue: 'NONE',
+        //         sortMode: 'ASCENDING_SMART',
+        //         branch: '',
+        //         useRepository: 'https://github.com/sun-enotion/test-jenkins.git',
+        //         description: 'select branch to run the deploy, default: main-v3',
+        //         listSize: '10')
         string( name: 'ReleaseNote',
                 defaultValue: '',
                 description: '')
