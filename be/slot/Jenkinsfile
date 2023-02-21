@@ -1,7 +1,8 @@
 pipeline {
-    agent {
-    label 'Rtp-7 || main'
-    }
+    agent any 
+    // agent {
+    // label 'Rtp-7 || main'
+    // }
     // tools {
     // nodejs 'nodejs12'
     // }
