@@ -59,36 +59,36 @@ pipeline {
                 visibleItemCount: 3,
                 description: 'Sent alert to testing group')
         }
-    stages {
-        stage ('Checkout Repo') {
-            steps {
-                script {
-                    checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: '*/main']],
-                    doGenerateSubmoduleConfigurations: false,
-                    extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${WORKSPACE}@script"]],
-                    submoduleCfg: [],
-                    userRemoteConfigs: [
-                        [credentialsId: "devops-bao-cicd",
-                        url: "${JENKINS_CI_REPO}"]
-                    ]])
-                    checkout([$class: 'GitSCM',
-                        branches: [[name: "${params.FROM_BRANCH}"]],
-                        doGenerateSubmoduleConfigurations: false,
-                        extensions: [[$class: 'CleanCheckout']],
-                        submoduleCfg: [],
-                        userRemoteConfigs: [
-                        [credentialsId: "${CREDENTIALS_ID}",
-                        url: "${PROJECT_REPO}"]
-                    ]])
-                    def VERSION = VersionNumber projectStartDate: "${PROJECT_START_DATE}", versionNumberString: '${DEPLOYMENT_NAME}-${BUILD_MONTH,XX}.${BUILD_DAY,XX}', versionPrefix: ''
-                    echo "${VERSION}"
-                    env.DPLVERSION="${VERSION}"
-                    currentBuild.displayName = VERSION
-                    }
-            }
-        }
+    // stages {
+    //     stage ('Checkout Repo') {
+    //         steps {
+    //             script {
+    //                 checkout([
+    //                 $class: 'GitSCM',
+    //                 branches: [[name: '*/main']],
+    //                 doGenerateSubmoduleConfigurations: false,
+    //                 extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${WORKSPACE}@script"]],
+    //                 submoduleCfg: [],
+    //                 userRemoteConfigs: [
+    //                     [credentialsId: "devops-bao-cicd",
+    //                     url: "${JENKINS_CI_REPO}"]
+    //                 ]])
+    //                 checkout([$class: 'GitSCM',
+    //                     branches: [[name: "${params.FROM_BRANCH}"]],
+    //                     doGenerateSubmoduleConfigurations: false,
+    //                     extensions: [[$class: 'CleanCheckout']],
+    //                     submoduleCfg: [],
+    //                     userRemoteConfigs: [
+    //                     [credentialsId: "${CREDENTIALS_ID}",
+    //                     url: "${PROJECT_REPO}"]
+    //                 ]])
+    //                 def VERSION = VersionNumber projectStartDate: "${PROJECT_START_DATE}", versionNumberString: '${DEPLOYMENT_NAME}-${BUILD_MONTH,XX}.${BUILD_DAY,XX}', versionPrefix: ''
+    //                 echo "${VERSION}"
+    //                 env.DPLVERSION="${VERSION}"
+    //                 currentBuild.displayName = VERSION
+    //                 }
+    //         }
+    //     }
 
 
         stage ('Deploy') {
