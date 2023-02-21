@@ -42,7 +42,6 @@ pipeline {
                         if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
                             sh("""
                                 cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
-                                // kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
                                 sleep 1
                             """)
                         } else {
@@ -53,19 +52,19 @@ pipeline {
             }
         }
 
-        // stage('Clean workspace') {
-        //     steps{
-        //         cleanWs()
-        //         dir("${workspace}@tmp") {
-        //         deleteDir()
-        //         }
-        //         dir("${workspace}@script") {
-        //         deleteDir()
-        //         }
-        //         dir("${workspace}@script@tmp") {
-        //         deleteDir()
-        //         }
-        //     }
-        // }
+        stage('Clean workspace') {
+            steps{
+                cleanWs()
+                dir("${workspace}@tmp") {
+                deleteDir()
+                }
+                dir("${workspace}@script") {
+                deleteDir()
+                }
+                dir("${workspace}@script@tmp") {
+                deleteDir()
+                }
+            }
+        }
     }
 }
