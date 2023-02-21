@@ -189,7 +189,7 @@ pipeline {
             }
             steps {
                 script {
-                    // def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
+                    def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
                     def teleUtil    = load "${WORKSPACE}@script/template/telegram.groovy"
                     DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
                     // WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "kubectl --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config get nodes -A | wc -l", returnStdout:true).trim()
