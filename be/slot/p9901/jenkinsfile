@@ -1,0 +1,277 @@
+pipeline {
+    agent {
+      label 'master'
+    }
+    tools {
+      maven 'maven'
+      jdk 'jdk'
+    }
+    options {
+      ansiColor('xterm')
+      buildDiscarder(logRotator(numToKeepStr: '20'))
+      timeout(time: 20, unit: 'MINUTES')
+      disableConcurrentBuilds()
+    }
+    environment {
+      DEPLOYMENT_NAME          = 'p9901 '
+      PROJECT_START_DATE       = '2023-02-16'
+      CREDENTIALS_ID           = 'enostd'
+      PROJECT_REPO             = 'git@github.com:beenotionorg/bingoheist-slot-service.git'
+      JENKINS_CI_REPO          = 'https://github.com/sun-enotion/test-jenkins.git'
+      TELEGRAM_GROUP           = 'BE_CICD'
+
+      GRPC_PORT_V1_OPT1        = '9901'
+      GRPC_PORT_V1_OPT1_TOMCAT = '19901'
+      GRPC_PORT_V1_OPT2        = '29901'
+      GRPC_PORT_V1_OPT2_TOMCAT = '39901'
+
+      SSH_PORT                 = '1357'
+      DOCKERHUB                = 'dockerhub.enostd.gay'
+      DOCKERREPO               = 'p9901'
+      registryCredential       = 'dockerhub'
+      dockerImage              = ''
+    }
+
+    parameters {
+        extendedChoice(
+                name: 'SERVER_LIST',
+                multiSelectDelimiter: ',',
+                quoteValue: false,
+                saveJSONParameterToFile: false,
+                type: 'PT_CHECKBOX',
+                value: 'Develop2',
+                defaultValue: '',
+                visibleItemCount: 10,
+                description: 'Default deploy server: Develop2')
+        gitParameter(
+                branchFilter: 'origin/(.*)',
+                tagFilter: '*',
+                defaultValue: 'develop',
+                name: 'FROM_BRANCH',
+                type: 'PT_BRANCH',
+                quickFilterEnabled: 'true',
+                selectedValue: 'NONE',
+                sortMode: 'ASCENDING_SMART',
+                branch: '',
+                useRepository: 'git@github.com:beenotionorg/bingoheist-slot-service.git',
+                description: 'Please select branch to run the deployment',
+                listSize: '10')
+        validatingString (name: 'GAMES_NAME',
+                defaultValue: 'p9901',
+                regex: 'p9901',
+                failedValidationMessage: 'Validation failed!',
+                description: 'The location folder for the deployment: /var/games/<GAMES_NAME>')
+        string( name: 'FILES_NAME_PREFIX',
+                defaultValue: '',
+                description: 'default value: <files-name>-<version>-<date>-<prefix>.jar')
+        string( name: 'RELEASE_NOTE',
+                defaultValue: '',
+                description: '')
+        }
+
+    stages {
+      stage ('Checkout Repo') {
+        steps {
+          script {
+            try {
+              checkout([
+                $class: 'GitSCM',
+                branches: [[name: '*/master']],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${WORKSPACE}@script"]],
+                submoduleCfg: [],
+                userRemoteConfigs: [
+                  [credentialsId: "${CREDENTIALS_ID}",
+                  url: "${JENKINS_CI_REPO}"]
+                ]])
+              checkout([$class: 'GitSCM',
+                branches: [[name: "${params.FROM_BRANCH}"]],
+                doGenerateSubmoduleConfigurations: false,
+                extensions: [[$class: 'CloneOption', depth: 1, noTags: true, reference: '', shallow: true]],
+                // extensions: [[$class: 'CleanCheckout']],
+                submoduleCfg: [],
+                userRemoteConfigs: [
+                  [credentialsId: "${CREDENTIALS_ID}",
+                  url: "${PROJECT_REPO}"]
+                ]])
+              teleUtil = load "${WORKSPACE}@script/template/telegram.groovy"
+            } catch(e) {
+              currentBuild.result = "FAILURE";
+              teleUtil.message("${env.TELEGRAM_GROUP}", "[FAILED]🔥\nClone code FAILED ${PROJECT_REPO}\n - Url: ${env.BUILD_URL} ...", true)
+              throw e;
+            }
+          }
+        }
+      }
+
+    //   stage ('Build packages') {
+    //       steps {
+    //         script {
+    //           teleUtil      = load "${WORKSPACE}@script/template/telegram.groovy"
+    //           DOCKER_NUMBER = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
+    //           try {
+    //             sh("""
+    //                 java --version
+    //                 mvn --version
+    //                 mvn clean install -U
+    //             """)
+    //           } catch(e) {
+    //             currentBuild.result = "FAILURE";
+    //             teleUtil.message("${env.TELEGRAM_GROUP}", "[FAILED]🔥\nTest & compile FAILED ${GAMES_NAME}\n - Url: ${env.BUILD_URL}...", true)
+    //             throw e;
+    //           }
+    //         }
+    //       }
+    //     }
+
+    //     stage('Deploy, Active and Report') {
+    //       when {
+    //         expression { params.SERVER_LIST != '' }
+    //       }
+    //       steps {
+    //         script {
+    //           SELECTED_SERVER     = "${params.SERVER_LIST}"
+    //           ARR                 = SELECTED_SERVER.split(",")
+    //           teleUtil            = load "${workspace}@script/template/telegram.groovy"
+    //           GET_START_USER      = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
+    //           CURRENT_DATE        = sh(script: '#!/bin/bash -e\n' + 'date +%Y%m%d%H%M%S', returnStdout:true).trim()
+    //           for ( SELECTED in ARR ) {
+    //             GRPC_PORT = "${GRPC_PORT_V1_OPT1}"
+    //             InetAddress dnsInetAddress = InetAddress.getByName "${SELECTED}"
+
+    //             def CURRENT_FILES_NAME = sh(script: '#!/bin/bash -e\n' + "ls -la target/ | grep '.jar' | grep -v 'origin' |  awk '{print \$NF}' | rev | cut -f 2- -d '.' | rev", returnStdout:true).trim()
+    //             if ( "${FILES_NAME_PREFIX}" != "" ) {
+    //               FILES_NAME = "${CURRENT_FILES_NAME}-${CURRENT_DATE}-${FILES_NAME_PREFIX}"
+    //             } else {
+    //               FILES_NAME = "${CURRENT_FILES_NAME}-${CURRENT_DATE}"
+    //             }
+    //             sh("""
+    //               set +x
+    //               cp target/${CURRENT_FILES_NAME}.jar ${WORKSPACE}/${FILES_NAME}.jar
+    //             """)
+
+    //             // upload ${FILES_NAME}.jar
+    //             sshagent(credentials : ['enostd']) {
+    //               sh("""
+    //                 set +x
+    //                 rsync -az -e "ssh -o StrictHostKeyChecking=no -p ${SSH_PORT}" ${FILES_NAME}.jar root@${dnsInetAddress.hostAddress}:/var/games/${GAMES_NAME}/
+    //                 ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} root@${dnsInetAddress.hostAddress} "ln -snf /var/games/${GAMES_NAME}/${FILES_NAME}.jar /var/games/${GAMES_NAME}/bingoheist-slot-service.jar"
+    //                 ssh -o StrictHostKeyChecking=no -p ${SSH_PORT} root@${dnsInetAddress.hostAddress} "systemctl restart ${GAMES_NAME}"
+    //               """)
+    //             }
+    //             sleep(5)
+    //             for (i=0; i < 60; i++) {
+    //               sleep(1)
+    //               def CHECK_SERVICE = sh(script: '#!/bin/bash -e\n' + "curl -s ${dnsInetAddress.hostAddress}:${GRPC_PORT} >/dev/null && echo STARTED || echo STOPED", returnStdout:true).trim()
+    //               if ( "${CHECK_SERVICE}" == "STARTED") {
+    //                 println "Check status: ${GRPC_PORT}:${CHECK_SERVICE}"
+    //                 break;
+    //               }
+    //             }
+
+    //             def RECHECK_SERVICE_STATUS = sh(script: '#!/bin/bash -e\n' + "curl -s ${dnsInetAddress.hostAddress}:${GRPC_PORT} >/dev/null && echo STARTED || echo STOPED", returnStdout:true).trim()
+    //             if ( "${RECHECK_SERVICE_STATUS}" == "STARTED" ) {
+    //               println "${GAMES_NAME} started"
+    //               teleUtil.message("${env.TELEGRAM_GROUP}", "[SUCESS]✅\nDeploy success [${GAMES_NAME}]\n - To Server: ${SELECTED}\n - Url: ${env.BUILD_URL}", true)
+    //             } else {
+    //               println "Can't start ${GAMES_NAME}, stoping..."
+    //               currentBuild.result = "FAILURE";
+    //               teleUtil.message("${env.TELEGRAM_GROUP}", "[FAILED]🔥\nCan't start [${GAMES_NAME}], stopped\n - On Server: ${SELECTED}\n - Url: ${env.BUILD_URL}", true)
+    //             }
+    //           }
+    //         }
+    //       }
+    //     }
+
+        stage ('Deploy') {
+        when {
+            expression { params.DEPLOY_ENV != '' }
+            }
+            steps {
+                script {
+                    def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
+                    def teleUtil    = load "${WORKSPACE}@script/template/telegram.groovy"
+                    DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
+                    // WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "kubectl --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config get nodes -A | wc -l", returnStdout:true).trim()
+                    // REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
+                    def REPLICAS_NUMBER = 2
+                    if ( "${BUILD_TEST}" == 'Yes' ) {
+                        TELEGRAM_GROUP = 'CICD_TEST'
+                    } else {
+                        TELEGRAM_GROUP = 'CICD_TEST'
+                    }
+
+                    def BO_LIST = ["p9901"]
+
+                    for ( DEPLOY_ENV in BO_LIST ) {
+                        execute = load "${WORKSPACE}@script/template/slot/slot.groovy"
+                        DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
+
+                        if ("${DEPLOY_ENV}" == 'p9901' ) {
+                            println"DEPLOY_ENV: ${DEPLOY_ENV}"
+                            execute.kBoHistoryDetail()
+                        }
+
+                        if (!fileExists("${WORKSPACE}/temp_build")) {
+                            sh("""
+                                mkdir ${WORKSPACE}/temp_build
+                            """)
+                        }
+
+                        // sh("""
+                        //     mv .env ${DEPLOY_ENV}/
+                        //     cat ${DEPLOY_ENV}/.env
+
+                        //     cp -r bo-common ${DEPLOY_ENV} ${WORKSPACE}/temp_build/
+                        //     mv Dockerfile ${WORKSPACE}/temp_build/
+                        //     cat ${WORKSPACE}/temp_build/Dockerfile
+                        // """)
+
+                        // dir("${WORKSPACE}") {
+                        //     dockerImage = docker.build("${DOCKERHUB}/${DOCKERREPO}")
+                        //     docker.withRegistry( "https://${DOCKERHUB}", registryCredential) {
+                        //         dockerImage.push("${IMAGE_NAME}")
+                        //         dockerImage.push("latest")
+                        //     }
+                        //     sh("""
+                        //         sleep 5
+                        //         docker rmi ${DOCKERHUB}/${DOCKERREPO}:${IMAGE_NAME}
+                        //         docker rmi ${DOCKERHUB}/${DOCKERREPO}:latest
+                        //     """)
+                        // }
+                        // sh("""
+                        //     sleep 1
+                        //     rm -f  ${WORKSPACE}/Dockerfile
+                        //     rm -f  ${WORKSPACE}/.env
+                        //     rm -rf ${WORKSPACE}/temp_build
+                        // """)
+
+                        if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
+                            sh("""
+                                cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
+                                sleep 1
+                            """)
+                        } else {
+                            println "File ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml does not exist, stop...."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Clean workspace'){
+            steps{
+                cleanWs()
+                dir("${workspace}@tmp") {
+                  deleteDir()
+                }
+                dir("${workspace}@script") {
+                  deleteDir()
+                }
+                dir("${workspace}@script@tmp") {
+                  deleteDir()
+                }
+            }
+        }
+    }
+}
