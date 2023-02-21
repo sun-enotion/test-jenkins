@@ -16,7 +16,7 @@ pipeline {
       DEPLOYMENT_NAME          = 'p9901 '
       PROJECT_START_DATE       = '2023-02-16'
       CREDENTIALS_ID           = 'enostd'
-      PROJECT_REPO             = 'git@github.com:beenotionorg/bingoheist-slot-service.git'
+      PROJECT_REPO             = 'https://github.com/sun-enotion/test-jenkins.git'
       JENKINS_CI_REPO          = 'https://github.com/sun-enotion/test-jenkins.git'
       TELEGRAM_GROUP           = 'BE_CICD'
 
