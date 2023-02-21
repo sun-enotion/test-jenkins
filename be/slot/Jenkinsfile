@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-    DEPLOYMENT_NAME     = 'p9901'
+    DEPLOYMENT_NAME     = 'game-slot'
     PROJECT_START_DATE  = '2022-12-8'
     CREDENTIALS_ID      = 'ktekdev'
     JENKINS_CI_REPO     = 'git@github.com:hungcaoktek/ktek-ci-cd.git'
@@ -25,7 +25,7 @@ pipeline {
                     WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
                     REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
                     TELEGRAM_GROUP = 'BE_CICD'
-                    
+
                     def BO_LIST = ["p9901"]
 
                     for ( DEPLOY_ENV in BO_LIST ) {
@@ -40,7 +40,7 @@ pipeline {
                         if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
                             sh("""
                                 cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
-                                kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
+                                // kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
                                 sleep 1
                             """)
                         } else {
