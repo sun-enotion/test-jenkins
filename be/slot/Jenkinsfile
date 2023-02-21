@@ -11,59 +11,62 @@ pipeline {
     WORKER_NODE         = 'bo-dev'
     }
 
-    stage ('Deploy') {
-    when {
-        expression { params.DEPLOY_ENV != '' }
-        }
-        steps {
-            script {
-                // def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
-                def teleUtil    = load "${WORKSPACE}@script/template/telegram.groovy"
-                DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
-                WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
-                REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
-                if ( "${BUILD_TEST}" == 'Yes' ) {
-                    TELEGRAM_GROUP = 'BE_CICD'
-                } else {
-                    TELEGRAM_GROUP = 'BE_CICD'
-                }
+    stages {
 
-                def BO_LIST = ["p9901"]
-
-                for ( DEPLOY_ENV in BO_LIST ) {
-                    execute = load "${WORKSPACE}@script/template/bo/HistoryDetail.groovy"
-                    DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
-
-                    if ("${DEPLOY_ENV}" == 'p9901' ) {
-                        println"DEPLOY_ENV: ${DEPLOY_ENV}"
-                        execute.kSlotService()
-                    }
-
-                    if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
-                        sh("""
-                            cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
-                            kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
-                            sleep 1
-                        """)
+        stage ('Deploy') {
+        when {
+            expression { params.DEPLOY_ENV != '' }
+            }
+            steps {
+                script {
+                    // def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
+                    def teleUtil    = load "${WORKSPACE}@script/template/telegram.groovy"
+                    DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
+                    WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
+                    REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
+                    if ( "${BUILD_TEST}" == 'Yes' ) {
+                        TELEGRAM_GROUP = 'BE_CICD'
                     } else {
-                        println "File ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml does not exist, stop...."
+                        TELEGRAM_GROUP = 'BE_CICD'
+                    }
+
+                    def BO_LIST = ["p9901"]
+
+                    for ( DEPLOY_ENV in BO_LIST ) {
+                        execute = load "${WORKSPACE}@script/template/bo/HistoryDetail.groovy"
+                        DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
+
+                        if ("${DEPLOY_ENV}" == 'p9901' ) {
+                            println"DEPLOY_ENV: ${DEPLOY_ENV}"
+                            execute.kSlotService()
+                        }
+
+                        if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
+                            sh("""
+                                cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
+                                kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
+                                sleep 1
+                            """)
+                        } else {
+                            println "File ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml does not exist, stop...."
+                        }
                     }
                 }
             }
         }
-    }
 
-    stage('Clean workspace') {
-        steps{
-            cleanWs()
-            dir("${workspace}@tmp") {
-            deleteDir()
-            }
-            dir("${workspace}@script") {
-            deleteDir()
-            }
-            dir("${workspace}@script@tmp") {
-            deleteDir()
+        stage('Clean workspace') {
+            steps{
+                cleanWs()
+                dir("${workspace}@tmp") {
+                deleteDir()
+                }
+                dir("${workspace}@script") {
+                deleteDir()
+                }
+                dir("${workspace}@script@tmp") {
+                deleteDir()
+                }
             }
         }
     }
