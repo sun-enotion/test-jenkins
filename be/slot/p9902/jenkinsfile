@@ -2,7 +2,7 @@ pipeline {
     agent any
     environment {
     DEPLOYMENT_NAME     = 'game-slot'
-    DEPLOY_ENV          = 'p9901'
+    DEPLOY_ENV          = 'p9902'
     PROJECT_START_DATE  = '2023-02-21'
     CREDENTIALS_ID      = 'ktekdev'
     JENKINS_CI_REPO     = 'git@github.com:hungcaoktek/ktek-ci-cd.git'
@@ -10,7 +10,7 @@ pipeline {
     DOCKERHUB           = 'dockerhub.enostd.gay'
     registryCredential  = 'dockerhub'
     WORKER_NODE         = 'bo-dev'
-    SERVICE_PORT        = '9901'
+    SERVICE_PORT        = '9902'
     }
 
     stages {
@@ -27,13 +27,13 @@ pipeline {
                     REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
                     TELEGRAM_GROUP = 'BE_CICD'
 
-                    def BO_LIST = ["p9901"]
+                    def BO_LIST = ["p9902"]
 
                     for ( DEPLOY_ENV in BO_LIST ) {
                         execute = load "${WORKSPACE}/template/slot/slot.groovy"
                         DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
 
-                        if ("${DEPLOY_ENV}" == 'p9901' ) {
+                        if ("${DEPLOY_ENV}" == 'p9902' ) {
                             println"DEPLOY_ENV: ${DEPLOY_ENV}"
                             execute.kSlotService()
                         }
