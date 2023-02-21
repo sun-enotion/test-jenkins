@@ -24,12 +24,8 @@ pipeline {
                     DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
                     WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
                     REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
-                    if ( "${BUILD_TEST}" == 'Yes' ) {
-                        TELEGRAM_GROUP = 'BE_CICD'
-                    } else {
-                        TELEGRAM_GROUP = 'BE_CICD'
-                    }
-
+                    TELEGRAM_GROUP = 'BE_CICD'
+                    
                     def BO_LIST = ["p9901"]
 
                     for ( DEPLOY_ENV in BO_LIST ) {
