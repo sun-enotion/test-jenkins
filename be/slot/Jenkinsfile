@@ -2,9 +2,9 @@ pipeline {
     agent {
     label 'Rtp-7 || main'
     }
-    tools {
-    nodejs 'nodejs12'
-    }
+    // tools {
+    // nodejs 'nodejs12'
+    // }
     options {
     ansiColor('xterm')
     buildDiscarder(logRotator(numToKeepStr: '20'))
