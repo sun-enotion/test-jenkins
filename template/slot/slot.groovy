@@ -5,23 +5,23 @@ def kSlotService() {
         metadata:
           creationTimestamp: null
           labels:
-            app: game-slot-${DEPLOYMENT_NAME}
-          name: game-slot-${DEPLOYMENT_NAME}
+            app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
+          name: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           namespace: ${DEPLOYMENT_NAME}
         spec:
           replicas: ${REPLICAS_NUMBER}
           selector:
             matchLabels:
-              app: game-slot-${DEPLOYMENT_NAME}
+              app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           strategy: {}
           template:
             metadata:
               labels:
-                app: game-slot-${DEPLOYMENT_NAME}
+                app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
             spec:
               containers:
-              - name: game-slot-${DEPLOYMENT_NAME}
-                image: ${DOCKERHUB}/game-slot-${DEPLOYMENT_NAME}:${REPLICAS_NUMBER}
+              - name: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
+                image: ${DOCKERHUB}/${DEPLOYMENT_NAME}-${DEPLOY_ENV}:${REPLICAS_NUMBER}
                 ports:
                 - containerPort: ${SERVICE_PORT}
                 livenessProbe:
@@ -45,8 +45,8 @@ def kSlotService() {
         metadata:
           creationTimestamp: null
           labels:
-            app: game-slot-${DEPLOYMENT_NAME}
-          name: game-slot-${DEPLOYMENT_NAME}
+            app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
+          name: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           namespace: ${DEPLOYMENT_NAME}
         spec:
           ports:
@@ -55,13 +55,13 @@ def kSlotService() {
             protocol: TCP
             targetPort: ${SERVICE_PORT}
           selector:
-            app: game-slot-${DEPLOYMENT_NAME}
+            app: ${DEPLOYMENT_NAME}-${DEPLOY_ENV}
           type: ClusterIP
         status:
           loadBalancer: {}
 
     """.stripIndent()
-    writeFile(file: "game-slot-${DEPLOYMENT_NAME}.yml", text: SLOT_SERVICE)
+    writeFile(file: "${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml", text: SLOT_SERVICE)
 }
 
 return this
