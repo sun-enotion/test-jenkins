@@ -2,6 +2,7 @@ pipeline {
     agent any
     environment {
     DEPLOYMENT_NAME     = 'game-slot'
+    DEPLOY_ENV          = 'p9901'
     PROJECT_START_DATE  = '2022-12-8'
     CREDENTIALS_ID      = 'ktekdev'
     JENKINS_CI_REPO     = 'git@github.com:hungcaoktek/ktek-ci-cd.git'
