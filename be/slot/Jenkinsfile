@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     // def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
-                    def teleUtil    = load "${WORKSPACE}/template/telegram.groovy"
+                    def teleUtil    = load "${WORKSPACE}@script/template/telegram.groovy"
                     DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
                     WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4' ", returnStdout:true).trim()
                     REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
@@ -29,7 +29,7 @@ pipeline {
                     def BO_LIST = ["p9901"]
 
                     for ( DEPLOY_ENV in BO_LIST ) {
-                        execute = load "${WORKSPACE}@script/template/bo/HistoryDetail.groovy"
+                        execute = load "${WORKSPACE}@script/template/slot/slot.groovy"
                         DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
 
                         if ("${DEPLOY_ENV}" == 'p9901' ) {
