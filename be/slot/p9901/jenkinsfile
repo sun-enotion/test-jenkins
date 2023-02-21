@@ -2,16 +2,16 @@ pipeline {
     agent {
       label 'main'
     }
-    tools {
-      maven 'maven'
-      jdk 'jdk'
-    }
-    options {
-      ansiColor('xterm')
-      buildDiscarder(logRotator(numToKeepStr: '20'))
-      timeout(time: 20, unit: 'MINUTES')
-      disableConcurrentBuilds()
-    }
+    // tools {
+    //   maven 'maven'
+    //   jdk 'jdk'
+    // }
+    // options {
+    //   ansiColor('xterm')
+    //   buildDiscarder(logRotator(numToKeepStr: '20'))
+    //   timeout(time: 20, unit: 'MINUTES')
+    //   disableConcurrentBuilds()
+    // }
     environment {
       DEPLOYMENT_NAME          = 'p9901 '
       PROJECT_START_DATE       = '2023-02-16'
@@ -43,24 +43,24 @@ pipeline {
                 defaultValue: '',
                 visibleItemCount: 10,
                 description: 'Default deploy server: Develop2')
-        gitParameter(
-                branchFilter: 'origin/(.*)',
-                tagFilter: '*',
-                defaultValue: 'develop',
-                name: 'FROM_BRANCH',
-                type: 'PT_BRANCH',
-                quickFilterEnabled: 'true',
-                selectedValue: 'NONE',
-                sortMode: 'ASCENDING_SMART',
-                branch: '',
-                useRepository: 'git@github.com:beenotionorg/bingoheist-slot-service.git',
-                description: 'Please select branch to run the deployment',
-                listSize: '10')
-        validatingString (name: 'GAMES_NAME',
-                defaultValue: 'p9901',
-                regex: 'p9901',
-                failedValidationMessage: 'Validation failed!',
-                description: 'The location folder for the deployment: /var/games/<GAMES_NAME>')
+        // gitParameter(
+        //         branchFilter: 'origin/(.*)',
+        //         tagFilter: '*',
+        //         defaultValue: 'develop',
+        //         name: 'FROM_BRANCH',
+        //         type: 'PT_BRANCH',
+        //         quickFilterEnabled: 'true',
+        //         selectedValue: 'NONE',
+        //         sortMode: 'ASCENDING_SMART',
+        //         branch: '',
+        //         useRepository: 'git@github.com:beenotionorg/bingoheist-slot-service.git',
+        //         description: 'Please select branch to run the deployment',
+        //         listSize: '10')
+        // validatingString (name: 'GAMES_NAME',
+        //         defaultValue: 'p9901',
+        //         regex: 'p9901',
+        //         failedValidationMessage: 'Validation failed!',
+        //         description: 'The location folder for the deployment: /var/games/<GAMES_NAME>')
         string( name: 'FILES_NAME_PREFIX',
                 defaultValue: '',
                 description: 'default value: <files-name>-<version>-<date>-<prefix>.jar')
