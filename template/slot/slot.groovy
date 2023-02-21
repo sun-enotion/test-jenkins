@@ -48,7 +48,7 @@ def kSlotService() {
           namespace: ${DEPLOYMENT_NAME}
         spec:
           ports:
-          - name: bo-auth-http
+          - name: tcp-port
             port: ${SERVICE_PORT}
             protocol: TCP
             targetPort: ${SERVICE_PORT}
