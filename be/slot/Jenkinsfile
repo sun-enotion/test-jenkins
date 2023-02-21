@@ -7,7 +7,7 @@ pipeline {
     CREDENTIALS_ID      = 'ktekdev'
     JENKINS_CI_REPO     = 'git@github.com:hungcaoktek/ktek-ci-cd.git'
     TELEGRAM_GROUP      = 'BO_KGAME'
-    DOCKERHUB           = 'dockerhub.gmstd.dev'
+    DOCKERHUB           = 'dockerhub.enostd.gay'
     registryCredential  = 'dockerhub'
     WORKER_NODE         = 'bo-dev'
     SERVICE_PORT        = '9901'
