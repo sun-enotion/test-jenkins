@@ -9,7 +9,7 @@ def kSlotService() {
           name: game-slot-${DEPLOYMENT_NAME}
           namespace: ${DEPLOYMENT_NAME}
         spec:
-          replicas: ${REPLICAS}
+          replicas: ${REPLICAS_NUMBER}
           selector:
             matchLabels:
               app: game-slot-${DEPLOYMENT_NAME}
