@@ -21,7 +21,7 @@ def kSlotService() {
             spec:
               containers:
               - name: game-slot-${DEPLOYMENT_NAME}
-                image: ${DOCKERHUB}/game-slot-${DEPLOYMENT_NAME}:${GIT_TAG}
+                image: ${DOCKERHUB}/game-slot-${DEPLOYMENT_NAME}:${REPLICAS_NUMBER}
                 ports:
                 - containerPort: ${SERVICE_PORT}
                 livenessProbe:
