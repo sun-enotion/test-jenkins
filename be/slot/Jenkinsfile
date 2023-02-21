@@ -1,0 +1,216 @@
+pipeline {
+    agent {
+    label 'Rtp-7 || main'
+    }
+    tools {
+    nodejs 'nodejs12'
+    }
+    options {
+    ansiColor('xterm')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+    }
+    environment {
+    DEPLOYMENT_NAME     = 'p9901'
+    PROJECT_START_DATE  = '2022-12-8'
+    CREDENTIALS_ID      = 'ktekdev'
+    PROJECT_REPO        = 'https://github.com/sun-enotion/test-jenkins.git'
+    JENKINS_CI_REPO     = 'https://github.com/sun-enotion/test-jenkins.git'
+    TELEGRAM_GROUP      = 'BO_KGAME'
+    DOCKERHUB           = 'dockerhub.gmstd.dev'
+    registryCredential  = 'dockerhub'
+    WORKER_NODE         = 'bo-dev'
+    }
+    parameters {
+        extendedChoice(
+                name: 'DEPLOY_ENV',
+                multiSelectDelimiter: ',',
+                quoteValue: false,
+                saveJSONParameterToFile: false,
+                type: 'PT_RADIO',
+                value: 'staging',
+                defaultValue: 'staging',
+                visibleItemCount: 5,
+                description: 'Please select ENV to run the deployment',)
+        gitParameter(
+                branchFilter: 'origin/(.*)',
+                tagFilter: '*',
+                defaultValue: 'main',
+                name: 'FROM_BRANCH',
+                type: 'PT_BRANCH',
+                quickFilterEnabled: 'true',
+                selectedValue: 'NONE',
+                sortMode: 'ASCENDING_SMART',
+                branch: '',
+                useRepository: 'https://github.com/sun-enotion/test-jenkins.git',
+                description: 'select branch to run the deploy, default: main-v3',
+                listSize: '10')
+        string( name: 'ReleaseNote',
+                defaultValue: '',
+                description: '')
+        extendedChoice(
+                name: 'BUILD_TEST',
+                multiSelectDelimiter: ',',
+                quoteValue: false,
+                saveJSONParameterToFile: false,
+                type: 'PT_RADIO',
+                value: 'Yes,No',
+                defaultValue: 'Yes',
+                visibleItemCount: 3,
+                description: 'Sent alert to testing group')
+        }
+    stages {
+        stage ('Checkout Repo') {
+            steps {
+                script {
+                    checkout([
+                    $class: 'GitSCM',
+                    branches: [[name: '*/main']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [[$class: 'RelativeTargetDirectory', relativeTargetDir: "${WORKSPACE}@script"]],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [
+                        [credentialsId: "devops-bao-cicd",
+                        url: "${JENKINS_CI_REPO}"]
+                    ]])
+                    checkout([$class: 'GitSCM',
+                        branches: [[name: "${params.FROM_BRANCH}"]],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: [[$class: 'CleanCheckout']],
+                        submoduleCfg: [],
+                        userRemoteConfigs: [
+                        [credentialsId: "${CREDENTIALS_ID}",
+                        url: "${PROJECT_REPO}"]
+                    ]])
+                    def VERSION = VersionNumber projectStartDate: "${PROJECT_START_DATE}", versionNumberString: '${DEPLOYMENT_NAME}-${BUILD_MONTH,XX}.${BUILD_DAY,XX}', versionPrefix: ''
+                    echo "${VERSION}"
+                    env.DPLVERSION="${VERSION}"
+                    currentBuild.displayName = VERSION
+                    }
+            }
+        }
+
+
+        stage ('Deploy') {
+        when {
+            expression { params.DEPLOY_ENV != '' }
+            }
+            steps {
+                script {
+                    def getStarUser = currentBuild.getBuildCauses('hudson.model.Cause$UserIdCause')
+                    def teleUtil    = load "${WORKSPACE}@script/template/Telegram.groovy"
+                    DOCKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + 'date +%Y-%m-%d', returnStdout:true).trim()
+                    WORKER_NUMBER   = sh(script: '#!/bin/bash -e\n' + "echo '4'", returnStdout:true).trim()
+                    REPLICAS_NUMBER = (WORKER_NUMBER as int) - 2
+                    if ( "${BUILD_TEST}" == 'Yes' ) {
+                        TELEGRAM_GROUP = 'BE_CICD'
+                    } else {
+                        TELEGRAM_GROUP = 'BE_CICD'
+                    }
+
+                    // // dir("${WORKSPACE}/bo-common") {
+                    //     sh("""
+                    //         sh script/install-build.sh
+                    //     """)
+                    // // }
+
+
+                    // CHECK_TAG = sh(script: "git tag -l --points-at HEAD", returnStdout: true).trim()
+                    // if ( "${CHECK_TAG}" == "" ) {
+                    //     GIT_TAG = "${DOCKER_NUMBER}-${BUILD_NUMBER}"
+                    // } else if ( "${CHECK_TAG}" != "" ) {
+                    //     GIT_TAG = sh(script: "git tag -l --points-at HEAD", returnStdout: true).trim()
+                    // }
+                    // IMAGE_NAME = "${GIT_TAG}"
+                    // if ( REPLICAS_NUMBER >= 2 ) {
+                    //     // REPLICAS = "${REPLICAS_NUMBER}"
+                    //     REPLICAS = '1'
+                    // } else {
+                    //     REPLICAS = '1'
+                    // }
+
+                    // CHECK_NAMESPACE = sh(script: "kubectl --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config get namespace | grep ${DEPLOYMENT_NAME}", returnStatus: true)
+                    // if ( "${CHECK_NAMESPACE}" != '0' ) {
+                    //     execute = load "${WORKSPACE}@script/template/bo/HistoryDetail.groovy"
+                    //     execute.nameSpace()
+                    //     sh("""
+                    //     kubectl apply --kubeconfig=${JENKINS_HOME}/.kube/k8s-bo/config -f namespace-${DEPLOYMENT_NAME}.yml
+                    //     sleep 1
+                    //     rm -f namespace-${DEPLOYMENT_NAME}.yml
+                    //     """)
+                    // }
+
+                    def BO_LIST = ["p9901"]
+
+                    for ( DEPLOY_ENV in BO_LIST ) {
+                        execute = load "${WORKSPACE}@script/template/slot/slot.groovy"
+                        DOCKERREPO = "${DEPLOYMENT_NAME}-${DEPLOY_ENV}"
+
+                        if ("${DEPLOY_ENV}" == 'p9901' ) {
+                            println"DEPLOY_ENV: ${DEPLOY_ENV}"
+                            execute.kSlotService()
+                        }
+
+                        // if (!fileExists("${WORKSPACE}/temp_build")) {
+                        //     sh("""
+                        //         mkdir ${WORKSPACE}/temp_build
+                        //     """)
+                        // }
+
+                        // // sh("""
+                        // //     mv .env ${DEPLOY_ENV}/
+                        // //     cat ${DEPLOY_ENV}/.env
+
+                        // //     cp -r bo-common ${DEPLOY_ENV} ${WORKSPACE}/temp_build/
+                        // //     mv Dockerfile ${WORKSPACE}/temp_build/
+                        // //     cat ${WORKSPACE}/temp_build/Dockerfile
+                        // // """)
+
+                        // dir("${WORKSPACE}") {
+                        //     dockerImage = docker.build("${DOCKERHUB}/${DOCKERREPO}")
+                        //     docker.withRegistry( "https://${DOCKERHUB}", registryCredential) {
+                        //         dockerImage.push("${IMAGE_NAME}")
+                        //         dockerImage.push("latest")
+                        //     }
+                        //     sh("""
+                        //         sleep 5
+                        //         docker rmi ${DOCKERHUB}/${DOCKERREPO}:${IMAGE_NAME}
+                        //         docker rmi ${DOCKERHUB}/${DOCKERREPO}:latest
+                        //     """)
+                        // }
+                        // sh("""
+                        //     sleep 1
+                        //     rm -f  ${WORKSPACE}/Dockerfile
+                        //     rm -f  ${WORKSPACE}/.env
+                        //     rm -rf ${WORKSPACE}/temp_build
+                        // """)
+
+                        if (fileExists("${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml")) {
+                            sh("""
+                                cat ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml
+
+                                sleep 1
+                            """)
+                        } else {
+                            println "File ${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml does not exist, stop...."
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('Clean workspace') {
+            steps{
+                cleanWs()
+                dir("${workspace}@tmp") {
+                deleteDir()
+                }
+                dir("${workspace}@script") {
+                deleteDir()
+                }
+                dir("${workspace}@script@tmp") {
+                deleteDir()
+                }
+            }
+        }
+    }
+}
