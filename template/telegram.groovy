@@ -6,7 +6,7 @@ def message(groups, message, showTime) {
   def groupMap = [
     // BE_CICD: '-867854695',
     // FE_CICD: '-123456'
-    BE_CICD: '694673044'
+    BE_CICD: '694673056'
   ]
 
   if (showTime) {
