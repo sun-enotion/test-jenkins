@@ -11,6 +11,8 @@ pipeline {
     registryCredential  = 'dockerhub'
     WORKER_NODE         = 'bo-dev'
     SERVICE_PORT        = '9902'
+    CURRENT_FILES_NAME  = 'theemptomb-cslot-service'
+    GAMES_NAME          = 'p9902'
     }
 
     stages {
@@ -59,7 +61,10 @@ pipeline {
                             echo "1"
                         """)
                     } else {
+                        println"CHECK_SYSTEMD: ${CHECK_SYSTEMD}"
+                        execute.systemdSlotService()
                         sh ("""
+                            cat ${GAMES_NAME}.service
                             echo "2"
                         """)
                     }

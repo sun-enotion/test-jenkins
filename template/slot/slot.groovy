@@ -62,4 +62,31 @@ def kSlotService() {
     writeFile(file: "${DEPLOYMENT_NAME}-${DEPLOY_ENV}.yml", text: SLOT_SERVICE)
 }
 
+def systemdSlotService () {
+  def SLOT_SERVICE = """
+      [Unit]
+      Description=Manage ${GAMES_NAME} service
+      After=network.target remote-fs.target nss-lookup.target
+
+      [Service]
+      WorkingDirectory=/var/games/${GAMES_NAME}
+      ExecStart=/usr/bin/java -jar -XX:+UseG1GC -Xmx1g -Dspring.profiles.active=game,test ${CURRENT_FILES_NAME}.jar --spring.config.name=application-game,application-test  --logging.path=/var/www/log
+      User=root
+      Type=simple
+      LimitNOFILE=infinity
+      LimitNPROC=infinity
+      LimitFSIZE=infinity
+      LimitCPU=infinity
+      LimitAS=infinity
+      LimitRSS=infinity
+      LimitCORE=infinity
+      #Restart=on-failure
+      #RestartSec=10
+
+      [Install]
+      WantedBy=multi-user.target
+  """.stripIndent()
+  writeFile(file: "${GAMES_NAME}.service", text: SLOT_SERVICE)
+}
+
 return this
